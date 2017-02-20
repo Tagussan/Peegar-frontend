@@ -1,0 +1,11 @@
+--- blockly/build.py	2017-02-20 17:41:55.331759065 +0900
++++ ./build.py	2017-02-20 17:41:43.208398613 +0900
+@@ -223,6 +223,8 @@ class Gen_compressed(threading.Thread):
+     # Add Blockly.Blocks to be compatible with the compiler.
+     params.append(("js_code", "goog.provide('Blockly.Blocks');"))
+     filenames = glob.glob(os.path.join("blocks", "*.js"))
++    filenames += glob.glob(os.path.join(os.path.pardir, "blocks", "*.js"))
++
+     for filename in filenames:
+       f = open(filename)
+       params.append(("js_code", "".join(f.readlines())))
