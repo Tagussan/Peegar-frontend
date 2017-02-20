@@ -1,0 +1,79 @@
+<xml id="toolbox" style="display: none">
+  <category name="Logic">
+    <category name="If">
+      <block type="controls_if"></block>
+      <block type="controls_if">
+        <mutation else="1"></mutation>
+      </block>
+      <block type="controls_if">
+        <mutation elseif="1" else="1"></mutation>
+      </block>
+    </category>
+    <category name="Boolean">
+      <block type="logic_compare"></block>
+      <block type="logic_operation"></block>
+      <block type="logic_negate"></block>
+    </category>
+  </category>
+  <category name="Loops">
+    <block type="controls_repeat_forever"></block>
+    <block type="controls_repeat_ext">
+      <value name="TIMES">
+        <block type="math_number">
+          <field name="NUM">10</field>
+        </block>
+      </value>
+    </block>
+    <block type="controls_whileUntil"></block>
+    <block type="controls_for">
+      <field name="VAR">i</field>
+      <value name="FROM">
+        <block type="math_number">
+          <field name="NUM">1</field>
+        </block>
+      </value>
+      <value name="TO">
+        <block type="math_number">
+          <field name="NUM">10</field>
+        </block>
+      </value>
+      <value name="BY">
+        <block type="math_number">
+          <field name="NUM">1</field>
+        </block>
+      </value>
+    </block>
+    <block type="controls_flow_statements"></block>
+  </category>
+  <category name="Wait">
+    <block type="wait_sec"></block>
+    <block type="wait_millisec"></block>
+  </category>
+  <category name="Math">
+    <block type="math_number"></block>
+    <block type="math_arithmetic"></block>
+    <block type="math_modulo"></block>
+    <block type="math_random_int">
+      <value name="FROM">
+        <block type="math_number">
+          <field name="NUM">1</field>
+        </block>
+      </value>
+      <value name="TO">
+        <block type="math_number">
+          <field name="NUM">100</field>
+        </block>
+      </value>
+    </block>
+  </category>
+  <category name="Variables" custom="VARIABLE"></category>
+  <category name="Functions" custom="PROCEDURE"></category>
+  <category name="IO port">
+    <block type="user_port_output"></block>
+    <block type="user_port_input"></block>
+  </category>
+  <category name="Debug">
+    <block type="text_print"></block>
+  </category>
+  <sep></sep>
+</xml>
