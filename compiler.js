@@ -513,12 +513,12 @@ function compileWorkspace(){
     printAssembly(assembly);//for debug
 
     //add header and footer
-    for(var i = 0; i < 100; i++){
-        assembly.push(["packet_end"]);
-    }
-    for(var i = 0; i < 3; i++){
-        assembly.unshift(["packet_start"]);
-    }
+    //for(var i = 0; i < 100; i++){
+    //    assembly.push(["packet_end"]);
+    //}
+    //for(var i = 0; i < 3; i++){
+    //    assembly.unshift(["packet_start"]);
+    //}
 
     var bin = assemble(assembly);
 
@@ -528,50 +528,7 @@ function compileWorkspace(){
     }
     cstyleBin += "}";
     console.log(cstyleBin);
-    generateBinaryWave(bin);
+    var wave = modulateBinary(bin);
+    prepareWriting(wave);
 }
 
-function generateBinaryWave(binary){
-    //parametor for coding
-    var short_length = 5;
-    var long_length = 10;
-    //
-    var signal = [];
-    for(var i = 0; i < binary.length; i++){
-        var binStr = ("00000000" + binary[i].toString(2)).substr(-8); //8 digit padding
-        for(var j = 0; j < 8; j++){
-            if(binStr[j] == '0'){
-                signal.push(0);
-            }else{
-                signal.push(1);
-            }
-        }
-    }
-
-    var wave_form = [];
-    for(var i = 0; i < signal.length; i++){
-        if(signal[i] == 1){
-            for(var rep = 0; rep < long_length; rep++){
-                wave_form.push(1);
-            }
-            for(var rep = 0; rep < short_length; rep++){
-                wave_form.push(0);
-            }
-        }
-        if(signal[i] == 0){
-            for(var rep = 0; rep < short_length; rep++){
-                wave_form.push(1);
-            }
-            for(var rep = 0; rep < long_length; rep++){
-                wave_form.push(0);
-            }
-        }
-    }
-
-    var datauri = generateWaveUri(wave_form, wave_form.length);
-    var audio = $('<audio>');
-    audio.attr("controls", true);
-    audio.attr("src", datauri);
-    audio.css("display", "block");
-    showModal("Successful!", audio);
-}

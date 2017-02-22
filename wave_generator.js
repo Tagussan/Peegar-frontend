@@ -41,11 +41,11 @@ function generateWaveUri(signal, size){
     var offset = 44;         // ヘッダ部分のサイズ
 
     // バイト配列を作成
-    var bytes = new Uint8Array(offset + size);
+    var bytes = new Uint8Array(offset + size * 2);
 
     // ヘッダ書き込み
     writeString(bytes, 'RIFF', 0);                 // RIFF ヘッダ
-    writeInt32(bytes, offset + size - 8, 4);       // ファイルサイズ - 8
+    writeInt32(bytes, offset + size * 2 - 8, 4);       // ファイルサイズ - 8
     writeString(bytes, 'WAVE', 8);                 // WAVE ヘッダ
     writeString(bytes, 'fmt ', 12);                // fmt チャンク
     writeInt32(bytes, 16, 16);                     // fmt チャンクのバイト数
@@ -56,15 +56,15 @@ function generateWaveUri(signal, size){
     writeInt16(bytes, (bitsPerSample >>> 3) * channel, 32); // ブロックサイズ
     writeInt16(bytes, bitsPerSample, 34);          // サンプルあたりのビット数
     writeString(bytes, 'data', 36);                // data チャンク
-    writeInt32(bytes, size, 40);                   // 波形データのバイト数
+    writeInt32(bytes, size * 2, 40);                   // 波形データのバイト数
 
-    //amplitutde of wav
-    var amplitude = 32767;
+    //amplitude of wav
+    var amplitude = 32765;
 
     // 波形データ書き込み (サイン波)
     var idx = 0;
     for (var i = 0; i < size * 2; i += 2) {
-        writeInt16(bytes, signal[idx] * 32767, offset + i);
+        writeInt16(bytes, signal[idx] * amplitude , offset + i);
         idx++;
     }
 
@@ -73,7 +73,6 @@ function generateWaveUri(signal, size){
     for (var i = 0; i < bytes.length; i++) {
         temp += String.fromCharCode(bytes[i]);
     }
-    console.log(temp.length);
 
     // 文字列を Data URI に変換
     var datauri = 'data:audio/wav;base64,' + btoa(temp);
