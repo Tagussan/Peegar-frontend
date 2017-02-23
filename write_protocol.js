@@ -17,7 +17,7 @@ Number.prototype.split_base = function(b, p){
 
 //generate big-endian byte array
 Number.prototype.to_bytes = function(p){
-    return this.split_base(8, p);
+    return this.split_base(256, p);
 };
 
 Number.prototype.to_bits = function(p){

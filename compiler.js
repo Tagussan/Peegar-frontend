@@ -513,12 +513,12 @@ function compileWorkspace(){
     printAssembly(assembly);//for debug
 
     //add header and footer
-    //for(var i = 0; i < 100; i++){
-    //    assembly.push(["packet_end"]);
-    //}
-    //for(var i = 0; i < 3; i++){
-    //    assembly.unshift(["packet_start"]);
-    //}
+    for(var i = 0; i < 1; i++){
+        assembly.push(["packet_end"]);
+    }
+    for(var i = 0; i < 1; i++){
+        assembly.unshift(["packet_start"]);
+    }
 
     var bin = assemble(assembly);
 
