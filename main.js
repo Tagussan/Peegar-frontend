@@ -32,19 +32,19 @@ function injectBlockly() {
       setWorkspaceHeight();
       Peegar.workspace = Blockly.inject('blocklyDiv',
           {
-            media: './media/',
-            collapse : true, 
-            comments : true, 
-            disable : true, 
-            maxBlocks : Infinity, 
+            media: './blockly/media/',
+            //collapse : true, 
+            //comments : true, 
+            //disable : true, 
+            //maxBlocks : Infinity, 
             trashcan : true, 
-            horizontalLayout : false, 
-            toolboxPosition : 'start', 
-            css : true, 
-            rtl : false, 
-            scrollbars : true, 
-            sounds : true, 
-            oneBasedIndex : true, 
+            //horizontalLayout : false, 
+            //toolboxPosition : 'start', 
+            //css : true, 
+            //rtl : false, 
+            //scrollbars : true, 
+            //sounds : true, 
+            //oneBasedIndex : true, 
             grid : {
               spacing : 20, 
               length : 1, 
@@ -53,10 +53,11 @@ function injectBlockly() {
             }, 
             zoom : {
               controls : true, 
-              wheel : true, 
+              wheel : false, 
               startScale : 0.9, 
               maxcale : 3, 
-              minScale : 0.3
+              minScale : 0.3,
+              scaleSpeed : 1.2
             },
             toolbox: $("#toolbox")[0]
           }
