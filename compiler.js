@@ -41,7 +41,7 @@ function generate_tree(block){
             }
         }
     }
-    var fieldKind = ["NUM", "MODE", "OP", "FLOW", "WHERE", "TEXT", "VAR", "STATE", "GROUP", "PORTNUM", "IOTYPE"];
+    var fieldKind = ["NUM", "MODE", "OP", "FLOW", "WHERE", "TEXT", "VAR", "STATE", "GROUP", "PORTNUM", "IOTYPE", "NAME"];
     for(var i = 0; i < fieldKind.length; i++){
         var fieldValue = block.getFieldValue(fieldKind[i]);
         if(fieldValue){
@@ -487,18 +487,31 @@ function generatePortSettingInstructions(){
 }
 
 function compileWorkspace(){
-  if(Peegar.workspace.getTopBlocks().length == 0){
-    showErrModal("Compile error", "<p>No block to compile.</p>");
-    return;
-  }
-  if(Peegar.workspace.getTopBlocks().length != 1){
-    showErrModal("Compile error", "<p>There are code fraction</p>");
-    return;
-  }
-    var topBlock = Peegar.workspace.getTopBlocks()[0];
+    var topBlocks = Peegar.workspace.getTopBlocks();
+    if(topBlocks.length == 0){
+        showErrModal("Compile error", "<p>No block to compile.</p>");
+        return;
+    }
+    //get Main Block
+    var mainBlocks = [];
+    var funcBlocks = [];
+    for(var i = 0; i < topBlocks.length; i++){
+        if(topBlocks[i].type.match(/procedures_def/)){
+            funcBlocks.push(topBlocks[i]);
+        }else{
+            mainBlocks.push(topBlocks[i]);
+        }
+    }
+
+    if(mainBlocks.length != 1){
+        showErrModal("Compile error", "<p>There are code fraction</p>");
+        return;
+    }
+
+    var mainBlock = mainBlocks[0];
 
     //top block is main
-    var tree = generate_tree(topBlock);
+    var tree = generate_tree(mainBlock);
     console.log(tree);
 
     var context = {var_global:[], var_local:[]};
