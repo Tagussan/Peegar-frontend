@@ -381,7 +381,11 @@ AstNode.prototype.compile = function(context){
     }else if(this.type == "text"){
         instructions.push(["print_str", this.value]);
         stack_last_type = "str";
-    }else {
+    }else if(this.type == "procedures_defnoreturn"){
+        instructions.merge(this.childNode["STACK"].compile(context));
+    }else if(this.type == "procedures_callnoreturn"){
+        instructions.push(["jump", this.value])
+    }else{
         console.log("Unknown block type: " + this.type);
     }
     if(this.childNode["NEXT"]){
@@ -427,6 +431,9 @@ var assemblyTable = {
     rand: 33,
     wait_sec: 34,
     wait_millisec: 35,
+
+    jump: 50,
+    ret: 51,
 
     initp_din_raw: 100,
     initp_din_slow: 101,
@@ -510,17 +517,36 @@ function compileWorkspace(){
 
     var mainBlock = mainBlocks[0];
 
-    //top block is main
+    //compile main block
     var tree = generate_tree(mainBlock);
     console.log(tree);
 
     var context = {var_global:[], var_local:[]};
     console.log("compiling function: main");
     var assembly = tree.compile_func(context);
+    assembly.push(["ret"]); //return after main block ends
 
     //insert port setting to front
     var portsetting = generatePortSettingInstructions();
     assembly = portsetting.concat(assembly);
+
+    //compile function blocks
+    var funcAddressTable = {};
+    for(var i = 0; i < funcBlocks.length; i++){
+        var funcBlockTree = generate_tree(funcBlocks[i]);
+        var funcBlockAssembly = funcBlockTree.compile_func(context);
+        funcBlockAssembly.push(["ret"]);
+
+        funcAddressTable[funcBlockTree.value] = assembly.length;
+        assembly = assembly.concat(funcBlockAssembly);
+    }
+
+    //replace function label to address
+    for(var i = 0; i < assembly.length; i++){
+        if(assembly[i][0] == "jump"){
+            assembly[i][1] = funcAddressTable[assembly[i][1]];
+        }
+    }
 
     console.log(assembly);
     printAssembly(assembly);//for debug
