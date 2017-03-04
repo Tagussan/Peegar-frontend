@@ -1,11 +1,10 @@
 Blockly.Blocks['user_port_output'] = {
   init: function() {
     this.appendDummyInput()
-        //.appendField("user port output");
-        .appendField(Blockly.Msg.IOPORT_OUTPUT);
+        .appendField("port output");
+        //.appendField(Blockly.Msg.IOPORT_OUTPUT);
     this.appendValueInput("VAL")
         .setCheck(null)
-        .appendField("port")
         .appendField(new Blockly.FieldDropdown([["A", "GROUPA"], ["B", "GROUPB"]]), "GROUP")
         .appendField(new Blockly.FieldDropdown([["LED", "ONBOARD"], ["1", "1"], ["2", "2"], ["3", "3"], ["4", "4"], ["5", "5"], ["6", "6"], ["7", "7"], ["8", "8"]]), "PORTNUM")
         .appendField("mode")
@@ -21,10 +20,9 @@ Blockly.Blocks['user_port_output'] = {
 Blockly.Blocks['user_port_input'] = {
   init: function() {
     this.appendDummyInput()
-        //.appendField("user port input");
-        .appendField(Blockly.Msg.IOPORT_INPUT);
+        .appendField("port input");
+        //.appendField(Blockly.Msg.IOPORT_INPUT);
     this.appendDummyInput()
-        .appendField("port")
         .appendField(new Blockly.FieldDropdown([["A", "GROUPA"], ["B", "GROUPB"]]), "GROUP")
         .appendField(new Blockly.FieldDropdown([["SW", "ONBOARD"], ["1", "1"], ["2", "2"], ["3", "3"], ["4", "4"], ["5", "5"], ["6", "6"], ["7", "7"], ["8", "8"]]), "PORTNUM")
         .appendField("mode")
