@@ -54,7 +54,7 @@ function injectBlockly() {
             zoom : {
               controls : true, 
               wheel : false, 
-              startScale : 0.9, 
+              startScale : 1.0, 
               maxcale : 3, 
               minScale : 0.3,
               scaleSpeed : 1.2

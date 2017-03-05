@@ -314,7 +314,11 @@ AstNode.prototype.compile = function(context){
         instructions.push(["rand"]);
     }else if(this.type == "math_number"){
         if(this.field == "NUM"){
+          if(context['valScale']){
+            instructions.push(["push", Number(this.value) * 10]);
+          }else{
             instructions.push(["push", Number(this.value)]);
+          }
         }
     }else if(this.type == "variables_get"){
         var var_name = this.value;
@@ -368,7 +372,9 @@ AstNode.prototype.compile = function(context){
         }
         instructions.push(["load_port", port_index]);
     }else if(this.type == "wait_sec"){
+        context['valScale'] = true;
         instructions.merge(this.childNode["VAL"].compile(context));
+        context['valScale'] = false;
         instructions.push(["wait_sec"])
     }else if(this.type == "wait_millisec"){
         instructions.merge(this.childNode["VAL"].compile(context));
