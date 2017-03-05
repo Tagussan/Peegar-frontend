@@ -30,6 +30,10 @@ function injectBlockly() {
       var xmlStr = new XMLSerializer().serializeToString(xml);
       $("#toolboxWrapper").html(xmlStr);
       setWorkspaceHeight();
+      var startScale = 1.3;
+      if($(window).width() < 767){
+        startScale = 1.5;
+      }
       Peegar.workspace = Blockly.inject('blocklyDiv',
           {
             media: './blockly/media/',
@@ -54,7 +58,7 @@ function injectBlockly() {
             zoom : {
               controls : true, 
               wheel : false, 
-              startScale : 1.0, 
+              startScale : startScale, 
               maxcale : 3, 
               minScale : 0.3,
               scaleSpeed : 1.2
@@ -62,6 +66,9 @@ function injectBlockly() {
             toolbox: $("#toolbox")[0]
           }
       );
+      if($(window).width() < 767){
+        toggleToolbox();//hide toolbox if mobile phone
+      }
     }
   });
 }
@@ -91,6 +98,10 @@ function uploadWorkspace() {
     Blockly.Xml.domToWorkspace(xml, workspace);
   };
   reader.readAsText(file);
+}
+
+function toggleToolbox() {
+  $(".blocklyToolboxDiv").toggle();
 }
 
 function showErrModal(title, body) {
