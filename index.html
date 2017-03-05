@@ -35,8 +35,9 @@
         <ul class="nav navbar-nav">
           <li><a href="#" onclick="compileWorkspace();"><span class="glyphicon glyphicon-transfer"></span> Compile</a></li>
           <li><a href="#" onclick="toggleToolbox();"><span class="glyphicon glyphicon-briefcase"></span> Toggle Toolbox</a></li>
-          <li><a href="#"><span class="glyphicon glyphicon-download-alt"></span> Download workspace</a></li>
-          <li><a href="#"><span class="glyphicon glyphicon-open"></span> Upload workspace</a></li>
+          <li><a id="downloadWorkspaceBtn" href="#" download="workspace.txt" onclick="downloadWorkspace();"><span class="glyphicon glyphicon-download-alt"></span> Download workspace</a></li>
+          <input type="file" name="files[]" id="uploadWorkspaceFakeInput" style="display:none;" onchange="uploadWorkspace();">
+          <li><a id="uploadWorkspaceBtn" href="#" onclick="$('#uploadWorkspaceFakeInput').click();"><span class="glyphicon glyphicon-open"></span> Upload workspace</a></li>
         </ul>
       </div>
     </div>
@@ -92,7 +93,8 @@
 
   <footer class="footer">
     <div class="container">
-      <p>footer</p>
+      <p class="muted">Project Peegar, started on 12 Jan. 2017</p>
+      <p class="muted">Powered by <a href="https://developers.google.com/blockly/">Blockly from Google</a></p>
     </div>
   </footer>
 

@@ -74,28 +74,32 @@ function injectBlockly() {
 }
 
 function downloadWorkspace() {
-  var xml = Blockly.Xml.workspaceToDom(workspace);
-  var txt = Blockly.Xml.domToText(xml);
+  var xml = Blockly.Xml.workspaceToDom(Peegar.workspace);
+  var text = Blockly.Xml.domToText(xml);
 
-  var blob = new Blob([ txt ], { "type" : "text/plain" });
+  var blob = new Blob([ text ], { "type" : "text/plain" });
   if (window.navigator.msSaveBlob) { 
-    window.navigator.msSaveBlob(blob, "test.txt"); 
+    window.navigator.msSaveBlob(blob, "workspace.txt"); 
 
     // msSaveOrOpenBlobの場合はファイルを保存せずに開ける
-    window.navigator.msSaveOrOpenBlob(blob, "test.txt"); 
+    window.navigator.msSaveOrOpenBlob(blob, "workspace.txt"); 
   } else {
-    document.getElementById("downloadWorkspace").href = window.URL.createObjectURL(blob);
+    document.getElementById("downloadWorkspaceBtn").href = window.URL.createObjectURL(blob);
   }
 }
 
+function importWorkspace(xmlText){
+  var xml = Blockly.Xml.textToDom(xmlText);
+  Blockly.Xml.domToWorkspace(xml, Peegar.workspace);
+}
+
 function uploadWorkspace() {
-  var filebutton = document.getElementById("uploadWorkspaceFile");
+  var filebutton = document.getElementById("uploadWorkspaceFakeInput");
   var file = filebutton.files[0];
   var reader = new FileReader();
   reader.onload = function(e){
     console.log("loaded:" + reader.result);
-    var xml = Blockly.Xml.textToDom(reader.result);
-    Blockly.Xml.domToWorkspace(xml, workspace);
+    importWorkspace(reader.result);
   };
   reader.readAsText(file);
 }
