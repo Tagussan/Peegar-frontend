@@ -314,11 +314,7 @@ AstNode.prototype.compile = function(context){
         instructions.push(["rand"]);
     }else if(this.type == "math_number"){
         if(this.field == "NUM"){
-          if(context['valScale']){
-            instructions.push(["push", Number(this.value) * 10]);
-          }else{
             instructions.push(["push", Number(this.value)]);
-          }
         }
     }else if(this.type == "variables_get"){
         var var_name = this.value;
@@ -372,10 +368,17 @@ AstNode.prototype.compile = function(context){
         }
         instructions.push(["load_port", port_index]);
     }else if(this.type == "wait_sec"){
-        context['valScale'] = true;
+      //accept floating point only for wait_sec
+      if(this.childNode["VAL"].type == "math_number"){
+        if(this.childNode["VAL"].value < 10){
+          instructions.merge(this.childNode["VAL"].compile(context));
+          instructions[instructions.length - 1][1] = instructions[instructions.length - 1][1] * 10;
+          instructions.push(["wait_100millisec"]);
+        }
+      }else{
         instructions.merge(this.childNode["VAL"].compile(context));
-        context['valScale'] = false;
         instructions.push(["wait_sec"])
+      }
     }else if(this.type == "wait_millisec"){
         instructions.merge(this.childNode["VAL"].compile(context));
         instructions.push(["wait_millisec"])
@@ -437,6 +440,7 @@ var assemblyTable = {
     rand: 33,
     wait_sec: 34,
     wait_millisec: 35,
+    wait_100millisec: 36,
 
     jump: 50,
     ret: 51,
