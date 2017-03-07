@@ -291,6 +291,7 @@ AstNode.prototype.compile = function(context){
             instructions.push(["or"]);    
         }
     }else if(this.type == "logic_negate"){
+        instructions.merge(this.childNode["BOOL"].compile(context));
         instructions.push(["not"]);
     }else if(this.type == "math_arithmetic"){
         instructions.merge(this.childNode["B"].compile(context));
