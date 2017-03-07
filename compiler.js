@@ -230,6 +230,20 @@ AstNode.prototype.compile = function(context){
         instructions.merge(condition_block);
         instructions.merge(do_block);
         instructions.merge(postproc_block);
+    }else if (this.type == "controls_whileUntil"){
+        var bool_block = this.childNode["BOOL"].compile(context);
+        var do_block = this.childNode["DO"].compile(context);
+
+        var condition_block = [];
+        condition_block.merge(bool_block);
+        if(this.value == "UNTIL"){
+            condition_block.push(["not"]);
+        }
+        condition_block.push(["incpc_if_zero", do_block.length + 1]); //add 1 for decpc
+
+        instructions.merge(condition_block);
+        instructions.merge(do_block);
+        instructions.push(["decpc", condition_block.length + do_block.length + 1]); //add 1 for this-instruction-self
     }else if(this.type == "controls_for"){
         var by_block = this.childNode["BY"].compile(context);
         var from_block = this.childNode["FROM"].compile(context);
