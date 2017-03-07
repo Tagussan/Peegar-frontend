@@ -18,9 +18,10 @@ function parse_tree(block){
     }
 }
 
-var AstNode = function(type){
+var AstNode = function(block){
+    this.block = block;
     this.childNode = {};
-    this.type = type;
+    this.type = block == null ? null : block.type;
     this.fields = {};
     this.field = "";
     this.value = 0;
@@ -30,15 +31,14 @@ function generate_tree(block){
     if(!block){
         return null;
     }
-    var node = new AstNode(block.type);
+    block.setWarningText(null);
+    var node = new AstNode(block);
     var inputs = block.inputList;
     if(inputs){
         for(var i = 0; i < inputs.length; i++){
             var input = inputs[i];
             var childnode = generate_tree(block.getInputTargetBlock(input.name));
-            if(childnode){
-                node.childNode[input.name] = childnode;
-            }
+            node.childNode[input.name] = childnode;
         }
     }
     var fieldKind = ["NUM", "MODE", "OP", "FLOW", "WHERE", "TEXT", "VAR", "STATE", "GROUP", "PORTNUM", "IOTYPE", "NAME"];
@@ -148,14 +148,34 @@ AstNode.prototype.compile = function(context){
         var instruction_blocks = [];
         var if_count = 0;
         for(var i = 0; i < Object.keys(this.childNode).length; i++){
-            if(this.childNode["IF" + i]){
+            if(typeof this.childNode["IF" + i] !== 'undefined'){
                 if_count++;
+                if (!this.childNode["IF" + i]){
+                    this.block.setWarningText("Condition must not be empty");
+                    if(i == 0){
+                        throw new Error("Condition of if block is empty");
+                    }else{
+                        throw new Error("Condition of else if block is empty");
+                    }
+                }
                 instruction_blocks["IF" + i] = this.childNode["IF" + i].compile(context);
+                if (!this.childNode["DO" + i]) {
+                    this.block.setWarningText("Contents must not be empty");
+                    if(i == 0){
+                        throw new Error("Contents of if block is empty");
+                    }else{
+                        throw new Error("Contents of else if block is empty");
+                    }
+                }
                 instruction_blocks["DO" + i] = this.childNode["DO" + i].compile(context);
             }
         }
         var has_else = false;
-        if(this.childNode["ELSE"]){
+        if(typeof this.childNode["ELSE"] !== 'undefined'){
+            if(!this.childNode["ELSE"]){
+                this.block.setWarningText("Contents must not be empty");
+                throw new Error("Contents of else block is empty");
+            }
             instruction_blocks["ELSE"] = this.childNode["ELSE"].compile(context);
             has_else = true;
         }
@@ -197,6 +217,10 @@ AstNode.prototype.compile = function(context){
 
         //instructions.merge(instruction_blocks.flatten());//for debug
     }else if(this.type == "controls_repeat_forever"){
+        if(!this.childNode["DO"]){
+            this.block.setWarningText("Contents must not be empty");
+            throw new Error("Contents of repeat forever block is empty");
+        }
         var do_block = this.childNode["DO"].compile(context);
         var postproc_block = [];
         postproc_block.push(["decpc", do_block.length + 1]);
@@ -204,6 +228,14 @@ AstNode.prototype.compile = function(context){
         instructions.merge(postproc_block);
 
     }else if(this.type == "controls_repeat_ext"){
+        if(!this.childNode["TIMES"]){
+            this.block.setWarningText("Repeat count must not be empty");
+            throw new Error("Repeat count of repeat block is empty");
+        }
+        if(!this.childNode["DO"]){
+            this.block.setWarningText("Contents must not be empty");
+            throw new Error("Contents of repeat block is empty");
+        }
         var times_block = this.childNode["TIMES"].compile(context);
         var do_block = this.childNode["DO"].compile(context);
         declare_local(context, "controls_repeat_ext");
@@ -231,6 +263,14 @@ AstNode.prototype.compile = function(context){
         instructions.merge(do_block);
         instructions.merge(postproc_block);
     }else if (this.type == "controls_whileUntil"){
+        if(!this.childNode["BOOL"]){
+            this.block.setWarningText("Condition must not be empty");
+            throw new Error("Condition of repeat block is empty");
+        }
+        if(!this.childNode["DO"]){
+            this.block.setWarningText("Contents must not be empty");
+            throw new Error("Contents of while block is empty");
+        }
         var bool_block = this.childNode["BOOL"].compile(context);
         var do_block = this.childNode["DO"].compile(context);
 
@@ -245,7 +285,23 @@ AstNode.prototype.compile = function(context){
         instructions.merge(do_block);
         instructions.push(["decpc", condition_block.length + do_block.length + 1]); //add 1 for this-instruction-self
     }else if(this.type == "controls_for"){
-        var by_block = this.childNode["BY"].compile(context);
+        if(!this.childNode["FROM"]){
+            this.block.setWarningText("'from' must not be empty");
+            throw new Error("Start value of count block is empty");
+        }
+        if(!this.childNode["TO"]){
+            this.block.setWarningText("'to' must not be empty");
+            throw new Error("last value of count block is empty");
+        }
+        if(!this.childNode["BY"]){
+            this.block.setWarningText("'by' must not be empty");
+            throw new Error("Step value of count block is empty");
+        }
+        if(!this.childNode["DO"]){
+            this.block.setWarningText("Contents must not be empty");
+            throw new Error("Contents of count block is empty");
+        }
+        var by_block = this.childNode["FROM"].compile(context);
         var from_block = this.childNode["FROM"].compile(context);
         var to_block = this.childNode["TO"].compile(context);
         //first declare local
@@ -281,6 +337,10 @@ AstNode.prototype.compile = function(context){
         instructions.merge(do_block);
         instructions.merge(postproc_block);
     }else if(this.type == "logic_compare"){
+        if(!this.childNode["A"] || !this.childNode["B"]){
+            this.block.setWarningText("Comparison must not be empty");
+            throw new Error("Comparison of compare block is empty");
+        }
         instructions.merge(this.childNode["B"].compile(context));
         instructions.merge(this.childNode["A"].compile(context));
         if(this.value == "EQ"){
@@ -297,6 +357,10 @@ AstNode.prototype.compile = function(context){
             instructions.push(["gte"]);
         }
     }else if(this.type == "logic_operation"){
+        if(!this.childNode["A"] || !this.childNode["B"]){
+            this.block.setWarningText("Operand must not be empty");
+            throw new Error("Operand of " + this.value + " block is empty");
+        }
         instructions.merge(this.childNode["B"].compile(context));
         instructions.merge(this.childNode["A"].compile(context));
         if(this.value == "AND"){
@@ -305,9 +369,17 @@ AstNode.prototype.compile = function(context){
             instructions.push(["or"]);    
         }
     }else if(this.type == "logic_negate"){
+        if(!this.childNode["BOOL"]){
+            this.block.setWarningText("Operand must not be empty");
+            throw new Error("Operand of not block is empty");
+        }
         instructions.merge(this.childNode["BOOL"].compile(context));
         instructions.push(["not"]);
     }else if(this.type == "math_arithmetic"){
+        if(!this.childNode["A"] || !this.childNode["B"]){
+            this.block.setWarningText("Operand must not be empty");
+            throw new Error("Operand of " + this.value + " block is empty");
+        }
         instructions.merge(this.childNode["B"].compile(context));
         instructions.merge(this.childNode["A"].compile(context));
         if(this.value == "MULTIPLY"){
@@ -318,18 +390,38 @@ AstNode.prototype.compile = function(context){
             instructions.push(["sub"]);
         }else if(this.value == "DIVIDE"){
             instructions.push(["div"]);
+        }else if(this.value == "POWER"){
+            throw new Error("POWER operation is unsupported");
         }
     }else if(this.type == "math_modulo"){
+        if(!this.childNode["DIVIDEND"] || !this.childNode["DIVISOR"]){
+            this.block.setWarningText("Operand must not be empty");
+            throw new Error("Operand of remainder block is empty");
+        }
         instructions.merge(this.childNode["DIVIDEND"].compile(context));
         instructions.merge(this.childNode["DIVISOR"].compile(context));
         instructions.push(["mod"]);
     }else if(this.type == "math_random_int"){
+        if(!this.childNode["FROM"]){
+            this.block.setWarningText("'from' must not be empty");
+            throw new Error("Minimum value of random block is empty");
+        }
+        if(!this.childNode["TO"]){
+            this.block.setWarningText("'to' must not be empty");
+            throw new Error("Maximum value of random block is empty");
+        }
         instructions.merge(this.childNode["TO"].compile(context));
         instructions.merge(this.childNode["FROM"].compile(context));
         instructions.push(["rand"]);
     }else if(this.type == "math_number"){
         if(this.field == "NUM"){
-            instructions.push(["push", Number(this.value)]);
+            var num = Number(this.value);
+            if(num === Math.round(num)){
+                instructions.push(["push", num]);
+            }else{
+                this.block.setWarningText("Number must be an integer");
+                throw new Error("Number must be an integer");
+            }
         }
     }else if(this.type == "variables_get"){
         var var_name = this.value;
@@ -338,6 +430,10 @@ AstNode.prototype.compile = function(context){
         stack_last_type = "int";
 
     }else if(this.type == "variables_set"){
+        if(!this.childNode["VALUE"]){
+            this.block.setWarningText("Target value must not be empty");
+            throw new Error("Target value of set block is empty");
+        }
         var var_name = this.value;
         declare_local(context, var_name);
         var itr_idx = find_local_var_index(context, var_name);
@@ -346,6 +442,10 @@ AstNode.prototype.compile = function(context){
         instructions.push(["str_local", itr_idx])
 
     }else if(this.type == "user_port_output"){
+        if(!this.childNode["VAL"]){
+            this.block.setWarningText("Target state must not be empty");
+            throw new Error("Target state of port output block is empty");
+        }
         //this section has to be re-written as port definition changes
         var fields = this.fields;
         var port_index = 0;
@@ -383,23 +483,35 @@ AstNode.prototype.compile = function(context){
         }
         instructions.push(["load_port", port_index]);
     }else if(this.type == "wait_sec"){
-      //accept floating point only for wait_sec
-      if(this.childNode["VAL"].type == "math_number"){
-        if(this.childNode["VAL"].value < 10){
-          instructions.merge(this.childNode["VAL"].compile(context));
-          instructions[instructions.length - 1][1] = instructions[instructions.length - 1][1] * 10;
-          instructions.push(["wait_100millisec"]);
+        if(!this.childNode["VAL"]){
+            this.block.setWarningText("Time must not be empty");
+            throw new Error("Time of wait sec block is empty");
         }
-      }else{
-        instructions.merge(this.childNode["VAL"].compile(context));
-        instructions.push(["wait_sec"])
-      }
+        //accept floating point only for wait_sec
+        if(this.childNode["VAL"].type == "math_number"){
+            if(this.childNode["VAL"].value < 10){
+                instructions.merge(this.childNode["VAL"].compile(context));
+                instructions[instructions.length - 1][1] = instructions[instructions.length - 1][1] * 10;
+                instructions.push(["wait_100millisec"]);
+            }
+        }else{
+            instructions.merge(this.childNode["VAL"].compile(context));
+            instructions.push(["wait_sec"])
+        }
     }else if(this.type == "wait_millisec"){
+        if(!this.childNode["VAL"]){
+            this.block.setWarningText("Time must not be empty");
+            throw new Error("Time of wait millisec block is empty");
+        }
         instructions.merge(this.childNode["VAL"].compile(context));
         instructions.push(["wait_millisec"])
 
     }else if(this.type == "text_print"){
         //text things are for debug only
+        if(!this.childNode["TEXT"]){
+            this.block.setWarningText("Output text must not be empty");
+            throw new Error("Output text of print block is empty");
+        }
         instructions.merge(this.childNode["TEXT"].compile(context));
         instructions.push(["print_int"]);
     }else if(this.type == "text"){
@@ -548,9 +660,13 @@ function compileWorkspace(){
 
     var context = {var_global:[], var_local:[]};
     console.log("compiling function: main");
-    var assembly = tree.compile_func(context);
-    assembly.push(["ret"]); //return after main block ends
-
+    try{
+        var assembly = tree.compile_func(context);
+        assembly.push(["ret"]); //return after main block ends
+    }catch(e){
+        showErrModal("Compile error", "<p>" + e.message + "</p>");
+        return;
+    }
     //insert port setting to front
     var portsetting = generatePortSettingInstructions();
     assembly = portsetting.concat(assembly);
@@ -559,8 +675,13 @@ function compileWorkspace(){
     var funcAddressTable = {};
     for(var i = 0; i < funcBlocks.length; i++){
         var funcBlockTree = generate_tree(funcBlocks[i]);
-        var funcBlockAssembly = funcBlockTree.compile_func(context);
-        funcBlockAssembly.push(["ret"]);
+        try{
+            var funcBlockAssembly = funcBlockTree.compile_func(context);
+            funcBlockAssembly.push(["ret"]);
+        }catch(e){
+            showErrModal("Compile error", "<p>" + e.message + "</p>");
+            return;
+        }
 
         funcAddressTable[funcBlockTree.value] = assembly.length;
         assembly = assembly.concat(funcBlockAssembly);
