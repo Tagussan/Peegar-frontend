@@ -391,6 +391,7 @@ AstNode.prototype.compile = function(context){
         }else if(this.value == "DIVIDE"){
             instructions.push(["div"]);
         }else if(this.value == "POWER"){
+            this.block.setWarningText("POWER operation is unsupported");
             throw new Error("POWER operation is unsupported");
         }
     }else if(this.type == "math_modulo"){
@@ -488,12 +489,9 @@ AstNode.prototype.compile = function(context){
             throw new Error("Time of wait sec block is empty");
         }
         //accept floating point only for wait_sec
-        if(this.childNode["VAL"].type == "math_number"){
-            if(this.childNode["VAL"].value < 10){
-                instructions.merge(this.childNode["VAL"].compile(context));
-                instructions[instructions.length - 1][1] = instructions[instructions.length - 1][1] * 10;
-                instructions.push(["wait_100millisec"]);
-            }
+        if(this.childNode["VAL"].type == "math_number" && Number(this.childNode["VAL"].value) < 10){
+            instructions.push(["push", Math.round(Number(this.childNode["VAL"].value) * 10)]);
+            instructions.push(["wait_100millisec"]);
         }else{
             instructions.merge(this.childNode["VAL"].compile(context));
             instructions.push(["wait_sec"])
